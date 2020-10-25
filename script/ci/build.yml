@@ -6,5 +6,7 @@ pool:
 
 steps:
 - script: |
+    sudo apt update
+    sudo apt install nasm -y
     make
   displayName: 'Makefile'
