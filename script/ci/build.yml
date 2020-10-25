@@ -7,6 +7,6 @@ pool:
 steps:
 - script: |
     sudo apt update
-    sudo apt install nasm -y
+    sudo apt install nasm udisks2 -y
     make
   displayName: 'Makefile'
