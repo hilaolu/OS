@@ -26,7 +26,7 @@ SectorBalance equ 17
     BPB_NumHeads dw 2
     BPB_HiddSec dd 0
     BPB_TotSec32 dd 0
-    BS_DrvNum dB 0
+    BS_DrvNum db 0
     BS_Reversed1 db 0
     BS_BootSig db 29h
     BS_VolID dd 0
@@ -76,13 +76,13 @@ Start:
 
 ;search loader.bin
 
-    mov word[SectorNo],SectorNumOfRootDirStart
+    mov word [SectorNo],SectorNumOfRootDirStart
 
 Search_In_Root_Dir_Begin:
 
-    cmp word[RootDirSizeForLoop],0
+    cmp word [RootDirSizeForLoop],0
     jz No_LoaderBin
-    dec word[RootDirSizeForLoop]
+    dec word [RootDirSizeForLoop]
     mov ax,00h
     mov es,ax
     mov bx,8000h
@@ -105,7 +105,7 @@ Cmp_FileName:
     jz FileName_Found
     dec cx
     lodsb
-    cmp al,byte[es:di]
+    cmp al,byte [es:di]
     jz Go_On
     jmp Different
 
@@ -120,7 +120,7 @@ Different:
     jmp Search_For_LoaderBin
 
 Goto_Next_Sector_In_Root_Dir:
-    add word[SectorNo],1
+    add word [SectorNo],1
     jmp Search_In_Root_Dir_Begin
 
 No_LoaderBin:
@@ -138,9 +138,9 @@ No_LoaderBin:
 
 FileName_Found:
     mov ax,RootDirSectors
-    add di,0ffe0h
+    and di,0ffe0h
     add di,01ah
-    mov cx,word[es:di]
+    mov cx,word [es:di]
     push cx
     add cx,ax
     add cx,SectorBalance
@@ -173,7 +173,7 @@ Go_On_Loading_File:
     jmp Go_On_Loading_File
 
 File_Loaded:
-    jmp $
+    jmp BaseOfLoader:OffsetOfLoader
 
 Func_ReadOneSector:
     push bp
@@ -188,17 +188,15 @@ Func_ReadOneSector:
     mov dh,al
     shr al,1
     mov ch,al
-    shr al,1
-    mov ch,al
     and dh,1
     pop bx
     mov dl,[BS_DrvNum]
 
-Label_Go_On_Reading:
+Go_On_Reading:
     mov ah,2
     mov al,byte [bp-2]
     int 13h
-    jc Label_Go_On_Reading
+    jc Go_On_Reading
     add esp,2
     pop bp
     ret
@@ -248,8 +246,7 @@ Odd db 0
 
 StartBootMessage: db "Start Boot"
 NoLoaderMessage: db "Error:No Loader Found"
-LoaderFileName: db "Loader bin",0
-
+LoaderFileName: db "LOADER  BIN",0
 
     resb 510 - ($ - $$)
     dw	0xaa55
