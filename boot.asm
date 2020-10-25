@@ -79,9 +79,8 @@ Start:
     mov word [SectorNo],SectorNumOfRootDirStart
 
 Search_In_Root_Dir_Begin:
-
     cmp word [RootDirSizeForLoop],0
-    jz No_LoaderBin
+    je No_LoaderBin ;use je instead of jz
     dec word [RootDirSizeForLoop]
     mov ax,00h
     mov es,ax
@@ -91,22 +90,22 @@ Search_In_Root_Dir_Begin:
     call Func_ReadOneSector
     mov si,LoaderFileName
     mov di,8000h
-    cld
+    cld ;clear direction flag
     mov dx,10h
 
 Search_For_LoaderBin:
     cmp dx,0
-    jz Goto_Next_Sector_In_Root_Dir
+    je Goto_Next_Sector_In_Root_Dir ;use je instead of jz
     dec dx
     mov cx,11
 
 Cmp_FileName:
     cmp cx,0
-    jz FileName_Found
+    je FileName_Found
     dec cx
     lodsb
     cmp al,byte [es:di]
-    jz Go_On
+    je Go_On
     jmp Different
 
 Go_On:
@@ -164,7 +163,7 @@ Go_On_Loading_File:
     pop ax
     call Func_GetFATEntry
     cmp ax,0fffh
-    jz File_Loaded
+    je File_Loaded
     push ax
     mov dx,RootDirSectors
     add ax,dx
@@ -214,7 +213,7 @@ Func_GetFATEntry:
     mov bx,2
     div bx
     cmp dx,0
-    jz Even
+    je Even
     mov byte [Odd],1
 
 Even:
