@@ -1,7 +1,10 @@
 all:img
 
-img:
-	nasm boot.asm -o bootloader.img
+bootloader:boot.asm
+	nasm boot.asm -o boot.bin
 
-run:
+img:bootloader
+	dd if=boot.bin of=./bootloader.img bs=512 count=1 conv=notrunc
+
+run:img
 	qemu-system-x86_64 -fda bootloader.img
