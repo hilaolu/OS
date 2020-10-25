@@ -16,3 +16,5 @@ $(OBJS):%.bin:%.asm
 
 clean:
 	rm *.bin *.img
+
+azure:$(OBJS)

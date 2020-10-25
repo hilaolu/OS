@@ -7,6 +7,6 @@ pool:
 steps:
 - script: |
     sudo apt update
-    sudo apt install nasm udisks2 -y
-    make 
+    sudo apt install nasm -y
+    make azure
   displayName: 'Makefile'
