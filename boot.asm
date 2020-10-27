@@ -11,7 +11,7 @@ SectorBalance equ 17
 ;FAT STRUCTURE
 ;(BOOT SECTOR->FILE ALLOCATE TABLE->ROOT DIRECTORY)(REVERSED)->DATA
 
-    jmp short Start
+    jmp short start
     nop
     BS_OEMName db 'OSFORIOT'
     BPB_BytesPerSec dw 512
@@ -33,7 +33,7 @@ SectorBalance equ 17
     BS_VolLab db 'boot loader'
     BS_FileSysType db 'FAT12   '
 
-Start:
+start:
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -78,51 +78,51 @@ Start:
 
     mov word [SectorNo],SectorNumOfRootDirStart
 
-Search_In_Root_Dir_Begin:
+search_in_root_dir_begin:
     cmp word [RootDirSizeForLoop],0
-    je No_LoaderBin ;use je instead of jz
+    je no_loader_bin ;use je instead of jz
     dec word [RootDirSizeForLoop]
     mov ax,00h
     mov es,ax
     mov bx,8000h
     mov ax,[SectorNo]
     mov cl,1
-    call Func_ReadOneSector
+    call read_one_sector
     mov si,LoaderFileName
     mov di,8000h
     cld ;clear direction flag
     mov dx,10h
 
-Search_For_LoaderBin:
+search_for_loader_bin:
     cmp dx,0
-    je Goto_Next_Sector_In_Root_Dir ;use je instead of jz
+    je goto_next_sector_in_root_dir ;use je instead of jz
     dec dx
     mov cx,11
 
-Cmp_FileName:
+cmp_filename:
     cmp cx,0
-    je FileName_Found
+    je filename_found
     dec cx
     lodsb
     cmp al,byte [es:di]
-    je Go_On
-    jmp Different
+    je go_on
+    jmp different
 
-Go_On:
+go_on:
     inc di
-    jmp Cmp_FileName
+    jmp cmp_filename
 
-Different:
+different:
     and di,0ffe0h
     add di,20h
     mov si,LoaderFileName
-    jmp Search_For_LoaderBin
+    jmp search_for_loader_bin
 
-Goto_Next_Sector_In_Root_Dir:
+goto_next_sector_in_root_dir:
     add word [SectorNo],1
-    jmp Search_In_Root_Dir_Begin
+    jmp search_in_root_dir_begin
 
-No_LoaderBin:
+no_loader_bin:
     mov ax,1301h
     mov bx,008ch
     mov dx,0100h
@@ -135,7 +135,7 @@ No_LoaderBin:
     int 10h
     jmp $
 
-FileName_Found:
+filename_found:
     mov ax,RootDirSectors
     and di,0ffe0h
     add di,01ah
@@ -148,7 +148,7 @@ FileName_Found:
     mov bx,OffsetOfLoader
     mov ax,cx
 
-Go_On_Loading_File:
+go_on_loading_file:
     push ax
     push bx
     mov ah,0eh
@@ -159,22 +159,22 @@ Go_On_Loading_File:
     pop ax
 
     mov cl,1
-    call Func_ReadOneSector
+    call read_one_sector
     pop ax
-    call Func_GetFATEntry
+    call get_fat_entry
     cmp ax,0fffh
-    je File_Loaded
+    je file_loaded
     push ax
     mov dx,RootDirSectors
     add ax,dx
     add ax,SectorBalance
     add bx,[BPB_BytesPerSec]
-    jmp Go_On_Loading_File
+    jmp go_on_loading_file
 
-File_Loaded:
+file_loaded:
     jmp BaseOfLoader:OffsetOfLoader
 
-Func_ReadOneSector:
+read_one_sector:
     push bp
     mov bp,sp
     sub esp,2
@@ -191,16 +191,16 @@ Func_ReadOneSector:
     pop bx
     mov dl,[BS_DrvNum]
 
-Go_On_Reading:
+go_on_reading:
     mov ah,2
     mov al,byte [bp-2]
     int 13h
-    jc Go_On_Reading
+    jc go_on_reading
     add esp,2
     pop bp
     ret
 
-Func_GetFATEntry:
+get_fat_entry:
     push es
     push bx
     push ax
@@ -213,10 +213,10 @@ Func_GetFATEntry:
     mov bx,2
     div bx
     cmp dx,0
-    je Even
+    je even
     mov byte [Odd],1
 
-Even:
+even:
     xor dx,dx
     mov bx,[BPB_BytesPerSec]
     div bx
@@ -224,16 +224,16 @@ Even:
     mov bx,8000h
     add ax,SectorNumOfFAT1Start
     mov cl,2
-    call Func_ReadOneSector
+    call read_one_sector
 
     pop dx
     add bx,dx
     mov ax,[es:bx]
     cmp byte [Odd],1
-    jnz Even_2
+    jnz even_2
     shr ax,4
 
-Even_2:
+even_2:
     and ax,0fffh
     pop bx
     pop es
