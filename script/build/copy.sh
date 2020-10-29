@@ -6,7 +6,7 @@ mount=`udisksctl mount -b $loop`
 sleep 0.1
 mountpoint=${mount##* }
 echo $mountpoint
-cp loader.bin $mountpoint/.
+cp loader.bin kernel.bin $mountpoint/.
 sleep 0.5
 udisksctl unmount -b $loop
 udisksctl loop-delete -b $loop

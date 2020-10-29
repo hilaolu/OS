@@ -1,0 +1,4 @@
+head.s
+*.o
+system
+*.bin
