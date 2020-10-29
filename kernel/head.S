@@ -1,142 +1,137 @@
 .section .text
 
-.globl _start
+.globl start
 
-_start:
+start:
+    mov $0x10,%ax
+    mov %ax,%ds
+    mov %ax,%es
+    mov %ax,%fs
+    mov %ax,%ss
+    mov $0x7e00,%esp
 
-	mov	$0x10,	%ax
-	mov	%ax,	%ds
-	mov	%ax,	%es
-	mov	%ax,	%fs
-	mov	%ax,	%ss
-	mov	$0x7E00,	%esp
+    lgdt gdt_pointer(%rip)
 
-//=======	load GDTR
+    lidt idt_pointer(%rip)
 
-	lgdt	GDT_POINTER(%rip)
+    mov $0x10,%ax
+    mov %ax,%ds
+    mov %ax,%es
+    mov %ax,%fs
+    mov %ax,%gs
+    mov %ax,%ss
 
-//=======	load	IDTR
+    movq $0x7e00,%rsp
 
-	lidt	IDT_POINTER(%rip)
-
-	mov	$0x10,	%ax
-	mov	%ax,	%ds
-	mov	%ax,	%es
-	mov	%ax,	%fs
-	mov	%ax,	%gs
-	mov	%ax,	%ss
-
-	movq	$0x7E00,	%rsp
-
-//=======	load	cr3
-
-	movq	$0x101000,	%rax
-	movq	%rax,		%cr3
-	movq	switch_seg(%rip),	%rax
-	pushq	$0x08
-	pushq	%rax
-	lretq
-
-//=======	64-bit mode code
+    movq $0x101000,%rax
+    movq %rax,%cr3
+    movq switch_seg(%rip), %rax
+    pushq $0x08
+    pushq %rax
+    lretq
 
 switch_seg:
-	.quad	entry64
+    .quad entry64
 
 entry64:
-	movq	$0x10,	%rax
-	movq	%rax,	%ds
-	movq	%rax,	%es
-	movq	%rax,	%gs
-	movq	%rax,	%ss
-	movq	$0xffff800000007E00,	%rsp		/* rsp address */
+    movq $0x10,%rax
+    movq %rax,%ds
+    movq %rax,%es
+    movq %rax,%gs
+    movq %rax,%ss
+    movq $0xffff800000007e00,%rsp
 
-	movq	go_to_kernel(%rip),	%rax		/* movq address */
-	pushq	$0x08
-	pushq	%rax
-	lretq
+    movq go_to_kernel(%rip),%rax
+    pushq $0x08
+    pushq %rax
+    lretq
 
 go_to_kernel:
-	.quad	start_kernel
+    .quad start_kernel
 
-//=======	init page
 .align 8
 
-.org	0x1000
+.org 0x1000
 
-__PML4E:
+pml4e:
+    .quad 0x102007
+    .fill 255,8,0
+    .quad 0x102007
+    .fill 255,8,0
 
-	.quad	0x102007
-	.fill	255,8,0
-	.quad	0x102007
-	.fill	255,8,0
+.org 0x2000
 
-.org	0x2000
+pdpte:
+    .quad 0x103003
+    .fill 511,8,0
 
-__PDPTE:
+.org 0x3000
 
-	.quad	0x103003
-	.fill	511,8,0
-
-.org	0x3000
-
-__PDE:
-
-	.quad	0x000083
-	.quad	0x200083
-	.quad	0x400083
-	.quad	0x600083
-	.quad	0x800083
-	.quad	0xe0000083		/*0x a00000*/
-	.quad	0xe0200083
-	.quad	0xe0400083
-	.quad	0xe0600083		/*0x1000000*/
-	.quad	0xe0800083
-	.quad	0xe0a00083
-	.quad	0xe0c00083
-	.quad	0xe0e00083
-	.fill	499,8,0
-
-//=======	GDT_Table
+pde:
+    .quad 0x000083
+    .quad 0x200083
+    .quad 0x400083
+    .quad 0x600083
+    .quad 0x800083
+    .quad 0xe0000083
+    .quad 0xe0200083
+    .quad 0xe0400083
+    .quad 0xe0600083
+    .quad 0xe0800083
+    .quad 0xe0a00083
+    .quad 0xe0c00083
+    .quad 0xe0e00083
+    .fill 499,8,0
 
 .section .data
 
-.globl GDT_Table
+.globl gdt_table
 
-GDT_Table:
-	.quad	0x0000000000000000			/*0	NULL descriptor		       	00*/
-	.quad	0x0020980000000000			/*1	KERNEL	Code	64-bit	Segment	08*/
-	.quad	0x0000920000000000			/*2	KERNEL	Data	64-bit	Segment	10*/
-	.quad	0x0020f80000000000			/*3	USER	Code	64-bit	Segment	18*/
-	.quad	0x0000f20000000000			/*4	USER	Data	64-bit	Segment	20*/
-	.quad	0x00cf9a000000ffff			/*5	KERNEL	Code	32-bit	Segment	28*/
-	.quad	0x00cf92000000ffff			/*6	KERNEL	Data	32-bit	Segment	30*/
-	.fill	10,8,0					/*8 ~ 9	TSS (jmp one segment <7>) in long-mode 128-bit 40*/
-GDT_END:
+gdt_table:
+    .quad 0x0000000000000000
+    .quad 0x0020980000000000
+    .quad 0x0000920000000000
+    .quad 0x0020f80000000000
+    .quad 0x0000f20000000000
+    .quad 0x00cf9a000000ffff
+    .quad 0x00cf92000000ffff
+    .fill 10,8,0
 
-GDT_POINTER:
-GDT_LIMIT:	.word	GDT_END - GDT_Table - 1
-GDT_BASE:	.quad	GDT_Table
+gdt_end:
 
-//=======	IDT_Table
+gdt_pointer:
 
-.globl IDT_Table
+gdt_limit:
+    .word gdt_end - gdt_table - 1
 
-IDT_Table:
-	.fill  512,8,0
-IDT_END:
+gdt_base:
+    .quad gdt_table
 
-IDT_POINTER:
-IDT_LIMIT:	.word	IDT_END - IDT_Table - 1
-IDT_BASE:	.quad	IDT_Table
+.globl idt_table
 
-//=======	TSS64_Table
+idt_table:
+    .fill 512,8,0
 
-.globl	TSS64_Table
+idt_end:
 
-TSS64_Table:
-	.fill  13,8,0
-TSS64_END:
+idt_pointer:
 
-TSS64_POINTER:
-TSS64_LIMIT:	.word	TSS64_END - TSS64_Table - 1
-TSS64_BASE:	.quad	TSS64_Table
+idt_limit:
+    .word idt_end - idt_table - 1
+
+idt_base:
+    .quad idt_table
+
+.globl tss64_table
+
+tss64_table:
+    .fill 13,8,0
+
+tss64_end:
+
+tss64_pointer:
+
+tss64_limit:
+    .word tss64_end - tss64_table - 1
+
+tss64_base: .quad tss64_table
