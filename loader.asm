@@ -710,3 +710,5 @@ GetSVGAVBEInfoOKMessage: db "Get SVGA VBE Info Success"
 StartGetSVGAModeInfoMessage: db "Start Get SVGA Mode Info"
 GetSVGAModeInfoErrMessage: db "Get SVGA Mode Info Error"
 GetSVGAModeInfoOKMessage: db "Get SVGA Mode Info Success"
+
+
